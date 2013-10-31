@@ -15,10 +15,10 @@ var game = this.game || {};
 
     var PADDLE_WIDTH = 120;
     var PADDLE_HEIGHT = 20;
-    var PADDLE_SPEED = STAGE_WIDTH / 4;
+    var PADDLE_SPEED = STAGE_WIDTH / 2;
 
     var BALL_SIZE = 10;
-    var BALL_SPEED = STAGE_HEIGHT / 3;
+    var BALL_SPEED = STAGE_HEIGHT / 2;
 
     var BLOCK_WIDTH = 100;
     var BLOCK_HEIGHT = 25;
@@ -89,6 +89,7 @@ var game = this.game || {};
         window.onkeydown = keyDown;
         window.onkeyup = keyUp;
         createjs.Ticker.setFPS(FRAME_RATE);
+        createjs.Ticker.useRAF = true;
         createjs.Ticker.addEventListener("tick", tick);
     }
 
@@ -130,7 +131,9 @@ var game = this.game || {};
 
     function drawBlock(x, y) {
         var block = new createjs.Shape();
-        block.graphics.beginFill("white").drawRect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT);
+        block.graphics.beginFill("white").drawRect(0, 0, BLOCK_WIDTH, BLOCK_HEIGHT);
+        block.x = x;
+        block.y = y;
         stage.addChild(block);
         blocks.push(block);
     }
@@ -149,34 +152,72 @@ var game = this.game || {};
 
     function checkCollisions() {
         // Check collision with paddle
-        if (ball.y + BALL_SIZE > paddle.y) 
+        if (isBallTouchingBlock(paddle) && ball.y + BALL_SIZE > paddle.y) {
             bounceOffPaddle();
+        }
 
         // Check collisions with blocks
         for (var i = blocks.length - 1; i >= 0; i--) {
-            checkCollisionWithBlock(blocks[i]);
+            if (checkCollisionWithBlock(blocks[i])) {
+                stage.removeChild(blocks[i]);
+                blocks.splice(i, 1);
+            }
+        }
+
+        // Keep in the bounds of the stage
+        if (ball.x + BALL_SIZE > STAGE_WIDTH) {
+            ball.x = STAGE_WIDTH - BALL_SIZE;
+            ball.vx = ball.vx * -1;
+        }
+        if (ball.x - BALL_SIZE < 0) {
+            ball.x = BALL_SIZE;
+            ball.vx = ball.vx * -1;
+        }
+        if (ball.y - BALL_SIZE < 0) {
+            ball.y = BALL_SIZE;
+            ball.vy = ball.vy * -1;
+        }
+        if (ball.y + BALL_SIZE > STAGE_HEIGHT) {
+            ball.y = STAGE_HEIGHT - BALL_SIZE;
+            ball.vy = ball.vy * -1;
+            // loseLife();
         }
     }
 
     function checkCollisionWithBlock(block) {
-        if (!isBallTouchingBlock(block))
-            return;
 
-        // If the ball is moving up
-        if (ball.vy < 0) {
-            // if (ball. y - BALL_SIZE < )
+        if (!isBallTouchingBlock(block))
+            return false;
+
+        if (ball.x < block.x) {
+            ball.x = block.x - BALL_SIZE;
+            ball.vx = ball.vx * -1;
         }
+        else if (ball.x > (block.x + BLOCK_WIDTH)) {
+            ball.x = block.x + BLOCK_WIDTH + BALL_SIZE;
+            ball.vx = ball.vx * -1;
+        }
+        else if (ball.vy > 0) {
+            ball.y = block.y - BALL_SIZE;
+            ball.vy = ball.vy * -1;
+        } else if (ball.vy <= 0) {
+            ball.y = block.y + BLOCK_HEIGHT + BALL_SIZE;
+            ball.vy = ball.vy *  -1;
+        }
+
+        return true;
     }
 
     function bounceOffPaddle() {
+        ball.y = paddle.y - BALL_SIZE;
         ball.vy = ball.vy * -1;
     }
 
     function isBallTouchingBlock(block) {
-        var tl = { x: ball.x - BALL_SIZE, y: ball.y - BALL_SIZE };
-        var tr = { x: ball.x + BALL_SIZE, y: ball.y - BALL_SIZE };
-        var bl = { x: ball.x - BALL_SIZE, y: ball.y + BALL_SIZE };
-        var br = { x: ball.x + BALL_SIZE, y: ball.y + BALL_SIZE };
+        var tl = block.globalToLocal(ball.x - BALL_SIZE, ball.y - BALL_SIZE);
+        var tr = block.globalToLocal(ball.x + BALL_SIZE, ball.y - BALL_SIZE);
+        var bl = block.globalToLocal(ball.x - BALL_SIZE, ball.y + BALL_SIZE);
+        var br = block.globalToLocal(ball.x + BALL_SIZE, ball.y + BALL_SIZE);
 
         if (block.hitTest(tl.x, tl.y))
             return true;
@@ -186,6 +227,12 @@ var game = this.game || {};
             return true;
         else if (block.hitTest(br.x, br.y))
             return true;
+
+        return false;
+    }
+
+    function loseLife() {
+        alert("LOST LIFE");
     }
 
 })(game);
