@@ -24,6 +24,8 @@ var game = this.game || {};
     var BLOCK_HEIGHT = 25;
     var BLOCK_PADDING = 5;
 
+    var SCORE_INCREMENT = 100;
+
     // Game Objects
     var stage = {};
     var paddle = {};
@@ -42,6 +44,10 @@ var game = this.game || {};
     // Game State
     var STATE = { START: 0, PLAYING: 1, RESTART: 2, GAME_OVER: 3 };
     var currState = STATE.START;
+
+    // Score
+    var score = 0;
+    var scoreText = {};
     
 
     // =================================================================
@@ -53,6 +59,7 @@ var game = this.game || {};
         initPaddle();
         initBall();
         initBlocks();
+        initScore();
         initEvents();
     }
 
@@ -92,6 +99,14 @@ var game = this.game || {};
                 drawBlock(x, y);
             }
         }
+    }
+
+    function initScore() {
+        scoreText = new createjs.Text("0", "bold 250px Arial", "white");
+        scoreText.x = STAGE_PADDING;
+        scoreText.y = STAGE_HEIGHT - 250 - STAGE_PADDING;
+        scoreText.alpha = 0.125;
+        stage.addChild(scoreText);
     }
 
     function initEvents() {
@@ -144,9 +159,15 @@ var game = this.game || {};
         // Convert the delta to seconds, which is much more useful
         var delta = e.delta/1000;
 
+        // Run update routines
         moveBall(delta);
         movePaddle(delta);
         checkCollisions();
+
+        // Update score
+        scoreText.text = score;
+
+        // Draw
         stage.update();
     }
 
@@ -200,6 +221,7 @@ var game = this.game || {};
         for (var i = blocks.length - 1; i >= 0; i--) {
             if (checkCollisionWithBlock(blocks[i])) {
                 stage.removeChild(blocks[i]);
+                score += SCORE_INCREMENT;
                 blocks.splice(i, 1);
             }
         }
