@@ -33,6 +33,11 @@ var game = this.game || {};
     // Key States
     var leftDown = false;
     var rightDown = false;
+
+    // Mouse States
+    var dragging = false;
+    var prevMouseX = 0;
+    var currMouseX = 0;
     
 
     // =================================================================
@@ -88,6 +93,8 @@ var game = this.game || {};
     function initEvents() {
         window.onkeydown = keyDown;
         window.onkeyup = keyUp;
+        window.onmousedown = mouseDown;
+        window.onmouseup = mouseUp;
         createjs.Ticker.setFPS(FRAME_RATE);
         createjs.Ticker.useRAF = true;
         createjs.Ticker.addEventListener("tick", tick);
@@ -113,6 +120,20 @@ var game = this.game || {};
             leftDown = false;
         else if (key === 39 || key === 68)
             rightDown = false;
+    }
+
+    function mouseDown(e) {
+        if (stage.mouseX > STAGE_HEIGHT * .75) {
+            dragging = true;
+            prevMouseX = currMouseX = stage.mouseX;
+        }
+        else {
+            dragging = false;
+        }
+    }
+
+    function mouseUp(e) {
+        dragging = false;
     }
 
     function tick(e) {
@@ -144,10 +165,18 @@ var game = this.game || {};
     }
 
     function movePaddle(delta) {
-        if (leftDown)
-            paddle.x -= delta * PADDLE_SPEED;
-        if (rightDown)
-            paddle.x += delta * PADDLE_SPEED;
+        if (!dragging) {
+            if (leftDown)
+                paddle.x -= delta * PADDLE_SPEED;
+            if (rightDown)
+                paddle.x += delta * PADDLE_SPEED;
+        }
+        else {
+            currMouseX = stage.mouseX;
+            paddle.x += currMouseX - prevMouseX;
+            prevMouseX = currMouseX;
+        }
+        
     }
 
     function checkCollisions() {
