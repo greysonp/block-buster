@@ -42,12 +42,16 @@ var game = this.game || {};
     var currMouseX = 0;
 
     // Game State
-    var STATE = { START: 0, PLAYING: 1, RESTART: 2, GAME_OVER: 3 };
+    var STATE = { START: 0, PLAYING: 1, GAME_OVER: 2 };
     var currState = STATE.START;
 
     // Score
     var score = 0;
     var scoreText = {};
+
+    // Timer
+    var timerId = 0;
+    var timerInterval = 10000;
     
 
     // =================================================================
@@ -85,19 +89,9 @@ var game = this.game || {};
     }
 
     function initBlocks() {
-        var numCols = Math.floor((STAGE_WIDTH - STAGE_PADDING * 2) / (BLOCK_WIDTH + BLOCK_PADDING));
         var numRows = Math.floor((STAGE_HEIGHT * (2/3) - STAGE_PADDING * 2) / (BLOCK_HEIGHT + BLOCK_PADDING));
-
-        var leftMargin = (STAGE_WIDTH - (numCols * (BLOCK_WIDTH + BLOCK_PADDING))) / 2;
-        console.log(leftMargin);
-        console.log(numCols);
-        for (var col = 0; col < numCols; col++) {
-            var x = col * (BLOCK_WIDTH + BLOCK_PADDING) + BLOCK_PADDING + leftMargin;
-
-            for (var row = 0; row < numRows; row++) {
-                var y = row * (BLOCK_HEIGHT + BLOCK_PADDING) + BLOCK_PADDING + STAGE_PADDING;
-                drawBlock(x, y);
-            }
+        for (var row = 0; row < numRows; row++) {
+            addRow();
         }
     }
 
@@ -117,6 +111,8 @@ var game = this.game || {};
         createjs.Ticker.setFPS(FRAME_RATE);
         createjs.Ticker.useRAF = true;
         createjs.Ticker.addEventListener("tick", tick);
+
+        timerId = setInterval(timerEvent, timerInterval);
     }
 
     // =================================================================
@@ -169,6 +165,34 @@ var game = this.game || {};
 
         // Draw
         stage.update();
+    }
+
+    function timerEvent() {
+        addRow();
+    }
+
+    function addRow() {
+        // Shift exisiting rows down
+        for (var i = 0; i < blocks.length; i++) {
+            blocks[i].y += BLOCK_HEIGHT + BLOCK_PADDING;
+        }
+
+        // Get number of blocks
+        var numCols = Math.floor((STAGE_WIDTH - STAGE_PADDING * 2) / (BLOCK_WIDTH + BLOCK_PADDING));
+        var leftMargin = (STAGE_WIDTH - (numCols * (BLOCK_WIDTH + BLOCK_PADDING))) / 2;
+
+        // Draw a row of blocks
+        for (var col = 0; col < numCols; col++) {
+            var x = col * (BLOCK_WIDTH + BLOCK_PADDING) + BLOCK_PADDING + leftMargin;
+            var y = 0;
+            drawBlock(x, y);
+        }
+
+        // Check to see if one of the blocks spills over
+        for (var i = 0; i < blocks.length; i++) {
+            if (blocks[i].y + BLOCK_HEIGHT > STAGE_HEIGHT)
+                gameOver();
+        }
     }
 
     // =================================================================
@@ -242,7 +266,7 @@ var game = this.game || {};
         if (ball.y + BALL_SIZE > STAGE_HEIGHT) {
             ball.y = STAGE_HEIGHT - BALL_SIZE;
             ball.vy = ball.vy * -1;
-            // loseLife();
+            gameOver();
         }
     }
 
@@ -293,8 +317,9 @@ var game = this.game || {};
         return false;
     }
 
-    function loseLife() {
-        alert("LOST LIFE");
+    function gameOver() {
+        currState = STATE.GAME_OVER;
+        alert("Game Over");
     }
 
 })(game);
