@@ -17,7 +17,7 @@ var game = this.game || {};
     var PADDLE_HEIGHT = 20;
     var PADDLE_SPEED = STAGE_WIDTH / 4;
 
-    var BALL_RADIUS = 10;
+    var BALL_SIZE = 10;
     var BALL_SPEED = STAGE_HEIGHT / 3;
 
     var BLOCK_WIDTH = 100;
@@ -57,9 +57,11 @@ var game = this.game || {};
 
     function initBall() {
         ball = new createjs.Shape();
-        ball.graphics.beginFill("white").drawCircle(0, 0, BALL_RADIUS);
+        ball.graphics.beginFill("white").drawRect(0, 0, BALL_SIZE * 2, BALL_SIZE * 2);
+        ball.regX = BALL_SIZE;
+        ball.regY = BALL_SIZE;
         ball.x = paddle.x + PADDLE_WIDTH/2;
-        ball.y = paddle.y - BALL_RADIUS;
+        ball.y = paddle.y - BALL_SIZE;
         var theta = -(Math.random() * (Math.PI/2) + (Math.PI/4));
         ball.vx = Math.cos(theta) * BALL_SPEED;
         ball.vy = Math.sin(theta) * BALL_SPEED;
@@ -118,6 +120,7 @@ var game = this.game || {};
 
         moveBall(delta);
         movePaddle(delta);
+        checkCollisions();
         stage.update();
     }
 
@@ -133,7 +136,6 @@ var game = this.game || {};
     }
 
     function moveBall(delta) {
-        console.log(ball.x);
         ball.x += delta * ball.vx;
         ball.y += delta * ball.vy;
     }
@@ -143,6 +145,47 @@ var game = this.game || {};
             paddle.x -= delta * PADDLE_SPEED;
         if (rightDown)
             paddle.x += delta * PADDLE_SPEED;
+    }
+
+    function checkCollisions() {
+        // Check collision with paddle
+        if (ball.y + BALL_SIZE > paddle.y) 
+            bounceOffPaddle();
+
+        // Check collisions with blocks
+        for (var i = blocks.length - 1; i >= 0; i--) {
+            checkCollisionWithBlock(blocks[i]);
+        }
+    }
+
+    function checkCollisionWithBlock(block) {
+        if (!isBallTouchingBlock(block))
+            return;
+
+        // If the ball is moving up
+        if (ball.vy < 0) {
+            // if (ball. y - BALL_SIZE < )
+        }
+    }
+
+    function bounceOffPaddle() {
+        ball.vy = ball.vy * -1;
+    }
+
+    function isBallTouchingBlock(block) {
+        var tl = { x: ball.x - BALL_SIZE, y: ball.y - BALL_SIZE };
+        var tr = { x: ball.x + BALL_SIZE, y: ball.y - BALL_SIZE };
+        var bl = { x: ball.x - BALL_SIZE, y: ball.y + BALL_SIZE };
+        var br = { x: ball.x + BALL_SIZE, y: ball.y + BALL_SIZE };
+
+        if (block.hitTest(tl.x, tl.y))
+            return true;
+        else if (block.hitTest(tr.x, tr.y))
+            return true;
+        else if (block.hitTest(bl.x, bl.y))
+            return true;
+        else if (block.hitTest(br.x, br.y))
+            return true;
     }
 
 })(game);
