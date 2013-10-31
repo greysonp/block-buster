@@ -38,6 +38,10 @@ var game = this.game || {};
     var dragging = false;
     var prevMouseX = 0;
     var currMouseX = 0;
+
+    // Game State
+    var STATE = { START: 0, PLAYING: 1, RESTART: 2, GAME_OVER: 3 };
+    var currState = STATE.START;
     
 
     // =================================================================
@@ -175,6 +179,13 @@ var game = this.game || {};
             currMouseX = stage.mouseX;
             paddle.x += currMouseX - prevMouseX;
             prevMouseX = currMouseX;
+        }
+
+        if (paddle.x < 0) {
+            paddle.x = 0; 
+        }
+        else if (paddle.x + PADDLE_WIDTH > STAGE_WIDTH) {
+            paddle.x = STAGE_WIDTH - PADDLE_WIDTH;
         }
         
     }
