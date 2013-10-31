@@ -14,8 +14,11 @@ var game = this.game || {};
     var STAGE_PADDING = 50;
 
     var PADDLE_WIDTH = 120;
-    var PADDLE_HEIGHT = 30;
+    var PADDLE_HEIGHT = 20;
     var PADDLE_SPEED = STAGE_WIDTH / 4;
+
+    var BALL_RADIUS = 10;
+    var BALL_SPEED = STAGE_HEIGHT / 3;
 
     var BLOCK_WIDTH = 100;
     var BLOCK_HEIGHT = 25;
@@ -24,6 +27,7 @@ var game = this.game || {};
     // Game Objects
     var stage = {};
     var paddle = {};
+    var ball = {};
     var blocks = [];
 
     // Key States
@@ -38,6 +42,7 @@ var game = this.game || {};
     module.init = function() {
         stage = new createjs.Stage("js-canvas");
         initPaddle();
+        initBall();
         initBlocks();
         initEvents();
     }
@@ -48,7 +53,17 @@ var game = this.game || {};
         paddle.x = STAGE_WIDTH/2 - PADDLE_WIDTH/2;
         paddle.y = STAGE_HEIGHT - PADDLE_HEIGHT;
         stage.addChild(paddle);
-        stage.update();
+    }
+
+    function initBall() {
+        ball = new createjs.Shape();
+        ball.graphics.beginFill("white").drawCircle(0, 0, BALL_RADIUS);
+        ball.x = paddle.x + PADDLE_WIDTH/2;
+        ball.y = paddle.y - BALL_RADIUS;
+        var theta = -(Math.random() * (Math.PI/2) + (Math.PI/4));
+        ball.vx = Math.cos(theta) * BALL_SPEED;
+        ball.vy = Math.sin(theta) * BALL_SPEED;
+        stage.addChild(ball);
     }
 
     function initBlocks() {
@@ -66,7 +81,6 @@ var game = this.game || {};
                 drawBlock(x, y);
             }
         }
-        stage.update();
     }
 
     function initEvents() {
@@ -99,7 +113,11 @@ var game = this.game || {};
     }
 
     function tick(e) {
-        movePaddle(e.delta);
+        // Convert the delta to seconds, which is much more useful
+        var delta = e.delta/1000;
+
+        moveBall(delta);
+        movePaddle(delta);
         stage.update();
     }
 
@@ -114,12 +132,17 @@ var game = this.game || {};
         blocks.push(block);
     }
 
+    function moveBall(delta) {
+        console.log(ball.x);
+        ball.x += delta * ball.vx;
+        ball.y += delta * ball.vy;
+    }
+
     function movePaddle(delta) {
-        var sec = delta/1000;
         if (leftDown)
-            paddle.x -= sec * PADDLE_SPEED;
+            paddle.x -= delta * PADDLE_SPEED;
         if (rightDown)
-            paddle.x += sec * PADDLE_SPEED;
+            paddle.x += delta * PADDLE_SPEED;
     }
 
 })(game);
