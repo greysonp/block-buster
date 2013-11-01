@@ -217,6 +217,7 @@ var game = this.game || {};
         block.graphics.beginFill("white").drawRect(0, 0, BLOCK_WIDTH, BLOCK_HEIGHT);
         block.x = x;
         block.y = y;
+        block.cache(0, 0, BLOCK_WIDTH, BLOCK_HEIGHT);
         stage.addChild(block);
         blocks.push(block);
     }
@@ -326,6 +327,9 @@ var game = this.game || {};
     }   
 
     function isBallTouchingBlock(block) {
+        if (Math.abs(block.x - ball.x) > 200 || Math.abs(block.y - ball.y) > 100)
+            return false;
+
         var tl = block.globalToLocal(ball.x - BALL_SIZE, ball.y - BALL_SIZE);
         var tr = block.globalToLocal(ball.x + BALL_SIZE, ball.y - BALL_SIZE);
         var bl = block.globalToLocal(ball.x - BALL_SIZE, ball.y + BALL_SIZE);
