@@ -99,7 +99,7 @@ var game = this.game || {};
         scoreText = new createjs.Text("0", "bold 250px Arial", "white");
         scoreText.x = STAGE_PADDING;
         scoreText.y = STAGE_HEIGHT - 250 - STAGE_PADDING;
-        scoreText.alpha = 0.125;
+        scoreText.alpha = 0.25;
         stage.addChild(scoreText);
     }
 
@@ -295,9 +295,22 @@ var game = this.game || {};
     }
 
     function bounceOffPaddle() {
+        // Reverse y direction
         ball.y = paddle.y - BALL_SIZE;
         ball.vy = ball.vy * -1;
-    }
+
+        // Edit the x velocity depending on where we hit the paddle
+        var thetas = [Math.PI * 0.8, Math.PI * .6, Math.PI * 0.5, Math.PI * 0.4, Math.PI * 0.2];
+        var breaks = [PADDLE_WIDTH * 0.2, PADDLE_WIDTH* 0.4, PADDLE_WIDTH * 0.6, PADDLE_WIDTH * 0.8, PADDLE_WIDTH];
+        var midpoint = paddle.x + PADDLE_WIDTH / 2;
+        
+        var i = 0;
+        while (ball.x > paddle.x + breaks[i] && i < breaks.length)
+            i++;
+
+        var theta = -1 * thetas[i];
+        ball.vx = Math.cos(theta) * BALL_SPEED;
+    }   
 
     function isBallTouchingBlock(block) {
         var tl = block.globalToLocal(ball.x - BALL_SIZE, ball.y - BALL_SIZE);
