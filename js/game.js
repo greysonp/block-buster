@@ -52,6 +52,10 @@ var game = this.game || {};
     // Timer
     var timerId = 0;
     var timerInterval = 10000;
+
+    // Buttons
+    var playButton = {};
+    var retryButton = {};
     
 
     // =================================================================
@@ -60,9 +64,16 @@ var game = this.game || {};
 
     module.init = function() {
         stage = new createjs.Stage("js-canvas");
+
+        playButton = new createjs.Text("play", "bold 250px Arial", "white");
+        playButton.x = STAGE_WIDTH / 2 - 275;
+        playButton.y = STAGE_HEIGHT / 2 - 125;
+        playButton.addEventListener("click", function() {
+            createjs.Tween.get(playButton).to({y: 1000}, 1000, createjs.Ease.quadInOut).call(startGame);
+        });
+        stage.addChild(playButton);
+
         initPaddle();
-        initBall();
-        initBlocks();
         initScore();
         initEvents();
     }
@@ -99,7 +110,7 @@ var game = this.game || {};
         scoreText = new createjs.Text("0", "bold 250px Arial", "white");
         scoreText.x = STAGE_PADDING;
         scoreText.y = STAGE_HEIGHT - 250 - STAGE_PADDING;
-        scoreText.alpha = 0.25;
+        scoreText.alpha = 0;
         stage.addChild(scoreText);
     }
 
@@ -111,8 +122,6 @@ var game = this.game || {};
         createjs.Ticker.setFPS(FRAME_RATE);
         createjs.Ticker.useRAF = true;
         createjs.Ticker.addEventListener("tick", tick);
-
-        timerId = setInterval(timerEvent, timerInterval);
     }
 
     // =================================================================
@@ -152,6 +161,10 @@ var game = this.game || {};
     }
 
     function tick(e) {
+        if (currState !== STATE.PLAYING) {
+            stage.update();
+            return;
+        }
         // Convert the delta to seconds, which is much more useful
         var delta = e.delta/1000;
 
@@ -271,7 +284,6 @@ var game = this.game || {};
     }
 
     function checkCollisionWithBlock(block) {
-
         if (!isBallTouchingBlock(block))
             return false;
 
@@ -307,6 +319,7 @@ var game = this.game || {};
         var i = 0;
         while (ball.x > paddle.x + breaks[i] && i < breaks.length)
             i++;
+        if (i >= breaks.length) i = breaks.length - 1;
 
         var theta = -1 * thetas[i];
         ball.vx = Math.cos(theta) * BALL_SPEED;
@@ -330,9 +343,51 @@ var game = this.game || {};
         return false;
     }
 
+
+    function startGame() {
+        currState = STATE.PLAYING;
+        scoreText.alpha = 0.25;
+        score = 0;
+        paddle.x = STAGE_WIDTH/2 - PADDLE_WIDTH/2;
+        initBall();
+        initBlocks();
+
+
+        timerId = setInterval(timerEvent, timerInterval);
+
+        stage.removeChild(playButton);
+    }
+
+    function restartGame() {
+        createjs.Tween.get(retryButton).to({y: 1000}, 1000, createjs.Ease.quadInOut).call(startGame);
+    }
+
     function gameOver() {
         currState = STATE.GAME_OVER;
-        alert("Game Over");
+
+        // Stop timer
+        clearInterval(timerId);
+
+        // Remove blocks
+        for (var i = 0; i < blocks.length; i++) {
+            var block = blocks[i];
+            (function(locked){
+                createjs.Tween.get(locked).to({y: locked.y - 700}, 1000, createjs.Ease.quadInOut).call(function() {
+                    stage.removeChild(locked);
+                    blocks = [];
+                });
+            })(block);
+        }
+
+        retryButton = new createjs.Text("retry", "bold 250px Arial", "white");
+        retryButton.x = STAGE_WIDTH / 2 - 300;
+        retryButton.y = 1000;
+        retryButton.addEventListener("click", restartGame);
+        stage.addChild(retryButton);
+        createjs.Tween.get(retryButton).to({y: STAGE_HEIGHT / 2 - 125}, 1000, createjs.Ease.quadInOut);
+
+        // Remove ball
+        stage.removeChild(ball);
     }
 
 })(game);
