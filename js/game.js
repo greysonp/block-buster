@@ -363,7 +363,10 @@ var game = this.game || {};
     }
 
     function restartGame() {
-        createjs.Tween.get(retryButton).to({y: 1000}, 1000, createjs.Ease.quadInOut).call(startGame);
+        createjs.Tween.get(retryButton).to({y: 1000}, 1000, createjs.Ease.quadInOut).call(function() {
+            stage.removeChild(retryButton);
+            startGame();
+        });
     }
 
     function gameOver() {
@@ -388,7 +391,7 @@ var game = this.game || {};
         retryButton.y = 1000;
         retryButton.addEventListener("click", restartGame);
         stage.addChild(retryButton);
-        createjs.Tween.get(retryButton).to({y: STAGE_HEIGHT / 2 - 125}, 1000, createjs.Ease.quadInOut);
+        createjs.Tween.get(retryButton).to({y: STAGE_HEIGHT / 2 - 125}, 1000, createjs.Ease.quadInOut)
 
         // Remove ball
         stage.removeChild(ball);
